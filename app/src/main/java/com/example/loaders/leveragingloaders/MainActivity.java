@@ -89,6 +89,12 @@ public class MainActivity extends AppCompatActivity
                     return null;
                 }
             }
+
+            @Override
+            public void deliverResult(List<User> data) {
+                super.deliverResult(data);
+                users = data;
+            }
         };
     }
 
