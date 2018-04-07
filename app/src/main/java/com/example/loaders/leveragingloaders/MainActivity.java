@@ -10,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.example.loaders.leveragingloaders.models.User;
 import com.example.loaders.leveragingloaders.services.GithubService;
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity
 
     private static final int LOADER_ID = 100;
 
+    ProgressBar mUsersProgressBar;
+    RecyclerView mUsersRecyclerView;
     GithubService mGithubService;
     UsersAdapter mAdapter;
 
@@ -33,17 +37,19 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mUsersRecyclerView = findViewById(R.id.recycler_view_users);
+        mUsersProgressBar = findViewById(R.id.progress_bar_users);
+
+        mAdapter = new UsersAdapter();
+        mUsersRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mUsersRecyclerView.setAdapter(mAdapter);
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.github.com")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         mGithubService = retrofit.create(GithubService.class);
-        mAdapter = new UsersAdapter();
-
-        RecyclerView recyclerView = findViewById(R.id.recycler_view_users);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        recyclerView.setAdapter(mAdapter);
 
         getSupportLoaderManager().initLoader(LOADER_ID, null, this);
     }
@@ -74,7 +80,9 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onStartLoading() {
                 super.onStartLoading();
+
                 if (users == null) {
+                    showLoadingIndicator();
                     forceLoad();
                 } else {
                     deliverResult(users);
@@ -103,6 +111,8 @@ public class MainActivity extends AppCompatActivity
         if (data != null) {
             mAdapter.swapData(data);
         }
+
+        showData();
     }
 
     @Override
@@ -111,5 +121,15 @@ public class MainActivity extends AppCompatActivity
 
     private void loadGithubUsers() {
         getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+    }
+
+    private void showLoadingIndicator() {
+        mUsersRecyclerView.setVisibility(View.INVISIBLE);
+        mUsersProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void showData() {
+        mUsersRecyclerView.setVisibility(View.VISIBLE);
+        mUsersProgressBar.setVisibility(View.INVISIBLE);
     }
 }
